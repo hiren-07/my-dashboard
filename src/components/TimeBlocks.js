@@ -4,18 +4,31 @@ import { PALETTE } from "../config/constants";
 
 export default function TimeBlocks({ blocks, setBlocks, theme }) {
   const [adding, setAdding] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ start: "", end: "", label: "", color: "#00C2FF" });
   const [draggedIdx, setDraggedIdx] = useState(null);
   const now = nowMin();
 
-  function add() {
+  function saveBlock() {
     if (!form.label || !form.start || !form.end) {
       alert("Please fill in the Start Time, End Time, and Block Label.");
       return;
     }
-    setBlocks(bs => [...bs, { ...form, id: `b_${Date.now()}`, done: false }]);
+    if (editId) {
+      setBlocks(bs => bs.map(b => b.id === editId ? { ...b, ...form } : b));
+    } else {
+      setBlocks(bs => [...bs, { ...form, id: `b_${Date.now()}`, done: false }]);
+    }
     setForm({ start: "", end: "", label: "", color: "#00C2FF" });
+    setEditId(null);
     setAdding(false);
+  }
+
+  function handleTimeChange(k, val) {
+    let v = val.replace(/[^\d]/g, "");
+    if (v.length > 4) v = v.substring(0, 4);
+    if (v.length > 2) v = v.substring(0, 2) + ":" + v.substring(2);
+    setForm(f => ({ ...f, [k]: v }));
   }
 
   function handleDragStart(e, idx) {
@@ -49,7 +62,7 @@ export default function TimeBlocks({ blocks, setBlocks, theme }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <div style={{ fontSize: 13, color: theme.muted }}>Your structured day · live indicator shows current block</div>
-        <button onClick={() => setAdding(a => !a)} style={{ background: theme.border, border: `1.5px solid ${theme.border2}`, color: theme.muted2, borderRadius: 8, padding: "6px 14px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>+ Add Block</button>
+        <button onClick={() => { setForm({ start: "", end: "", label: "", color: "#00C2FF" }); setEditId(null); setAdding(a => !a); }} style={{ background: theme.border, border: `1.5px solid ${theme.border2}`, color: theme.muted2, borderRadius: 8, padding: "6px 14px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>+ Add Block</button>
       </div>
       <div style={{ position: "relative", paddingLeft: 58 }}>
         <div style={{ position: "absolute", left: 41, top: 8, bottom: 8, width: 2, background: theme.border, borderRadius: 2 }} />
@@ -77,6 +90,9 @@ export default function TimeBlocks({ blocks, setBlocks, theme }) {
                   </div>
                   <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: theme.muted, marginTop: 3 }}>{b.start} – {b.end}</div>
                 </div>
+                <div onClick={() => { setForm({ start: b.start, end: b.end, label: b.label, color: b.color }); setEditId(b.id); setAdding(true); }} style={{ color: theme.muted, cursor: "pointer", fontSize: 15, padding: "0 6px", marginRight: 4 }}>
+                  ✏️
+                </div>
                 <div onClick={() => setBlocks(bs => bs.map(x => x.id === b.id ? { ...x, done: !x.done } : x))} style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${b.done ? b.color : theme.border2}`, background: b.done ? b.color : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
                   {b.done && <span style={{ color: "#000", fontSize: 10, fontWeight: 900 }}>✓</span>}
                 </div>
@@ -87,11 +103,11 @@ export default function TimeBlocks({ blocks, setBlocks, theme }) {
         })}
       </div>
       {adding && (
-        <div style={{ background: theme.card, border: `1.5px solid ${theme.border2}`, borderRadius: 14, padding: 16, marginTop: 10 }}>
+        <div style={{ marginLeft: 60, background: theme.card, border: `1.5px solid ${theme.border2}`, borderRadius: 14, padding: 16, marginTop: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
             {[["start", "Start"], ["end", "End"]].map(([k, l]) => (
               <div key={k}><div style={{ fontSize: 11, color: theme.muted2, marginBottom: 4 }}>{l} Time</div>
-                <input type="time" value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} style={{ width: "100%", background: theme.topbar, border: `1.5px solid ${theme.border2}`, color: theme.text2, borderRadius: 8, padding: "7px 10px", fontSize: 13, outline: "none", fontFamily: "inherit" }} /></div>
+                <input type="text" placeholder="HH:MM" maxLength={5} value={form[k]} onChange={e => handleTimeChange(k, e.target.value)} style={{ width: "100%", background: theme.topbar, border: `1.5px solid ${theme.border2}`, color: theme.text2, borderRadius: 8, padding: "7px 10px", fontSize: 13, outline: "none", fontFamily: "inherit" }} /></div>
             ))}
           </div>
           <input placeholder="Block label..." value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} style={{ width: "100%", background: theme.topbar, border: `1.5px solid ${theme.border2}`, color: theme.text2, borderRadius: 8, padding: "7px 10px", fontSize: 13, outline: "none", marginBottom: 10, fontFamily: "inherit" }} />
@@ -100,8 +116,8 @@ export default function TimeBlocks({ blocks, setBlocks, theme }) {
             {PALETTE.map(c => <div key={c} onClick={() => setForm(f => ({ ...f, color: c }))} style={{ width: 20, height: 20, borderRadius: "50%", background: c, cursor: "pointer", border: form.color === c ? `2.5px solid ${theme.text}` : "2px solid transparent", transition: "border 0.15s" }} />)}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={add} style={{ flex: 1, background: "#00C2FF", color: "#000", border: "none", borderRadius: 8, padding: "8px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Add Block</button>
-            <button onClick={() => setAdding(false)} style={{ background: theme.border, color: theme.muted2, border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+            <button onClick={saveBlock} style={{ flex: 1, background: "#00C2FF", color: "#000", border: "none", borderRadius: 8, padding: "8px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{editId ? "Save Block" : "Add Block"}</button>
+            <button onClick={() => { setAdding(false); setEditId(null); }} style={{ background: theme.border, color: theme.muted2, border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
           </div>
         </div>
       )}
