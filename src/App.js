@@ -4,6 +4,7 @@ import TimeBlocks from "./components/TimeBlocks";
 import NotesLists from "./components/NotesLists";
 import { getNow, getToday, nowMin, loadFromStorage, saveToStorage } from "./helpers/utils";
 import { DEFAULT_PROJECTS, DEFAULT_GROWTH, DEFAULT_BLOCKS, PC, PALETTE, THEMES, THEME_KEY } from "./config/constants";
+import logo from "./assets/logo192.png";
 
 // ── MAIN ─────────────────────────────────────────────────────────────────
 export default function App() {
@@ -177,7 +178,7 @@ export default function App() {
       {/* TOP BAR */}
       <div style={{ background: T.topbar, borderBottom: `1px solid ${T.border}`, padding: "13px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, transition: "background 0.3s" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-          <div style={{ width: 35, height: 35, background: "linear-gradient(135deg,#00C2FF,#7C3AED)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>⚡</div>
+          <img src={logo} alt="Logo" style={{ width: 35, height: 35, borderRadius: 9 }} />
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.02em", color: T.text }}>Dashboard</div>
             <div style={{ fontSize: 11, color: T.muted, fontFamily: "'Space Mono',monospace" }}>{getToday()}</div>
